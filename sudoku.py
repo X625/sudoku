@@ -59,18 +59,12 @@ class Sudoku:
         return pq
 
     def fill_cells_with_only_one_possible_value(self):
-        """
-        Scan the board for obvious next moves, and go ahead and make those.
-        In particular this means repeatedly looking for cells that we've marked
-        as having a single possible value and actually placing that value on the
-        board.
-        """
         cells_need_updating = True
         while cells_need_updating:
             cells_need_updating = False
             for r, row in enumerate(self.encoded_possible_values):
                 for c, poss_vals in enumerate(row):
-                    pc = bin(poss_vals).count("1")#count_ones(poss_vals)
+                    pc = bin(poss_vals).count("1")
                     if pc == 1:
                         if not cells_need_updating:
                             cells_need_updating = True
@@ -84,7 +78,6 @@ class Sudoku:
     def expand(self):
         next_steps = self.get_possible_expansions()
         if next_steps.qsize():
-            # pc, row, col, choices = self.get_scored_next_steps().get()
             pc, row, col, choices = next_steps.get()
             children = []
             for val in choices:
@@ -96,10 +89,6 @@ class Sudoku:
             return children
         return []
 
-    def pretty_print(self):
-        int2str = lambda s: str(s).replace('0', ' ')
-        rows = [','.join(map(int2str, row)) for row in self.matrix]
-        print('\n'.join(rows))
 
     def __lt__(self, other):
         return self.distance_to_goal() < other.distance_to_goal()

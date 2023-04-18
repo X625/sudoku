@@ -1,10 +1,6 @@
-from functools import reduce
 from queue import PriorityQueue
-import utilities
 from sudoku import Sudoku
 
-
-# from sudoku import Sudoku
 
 class Solver:
     def __init__(self, initial_board):

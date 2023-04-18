@@ -1,10 +1,8 @@
 import random
 import math
 
-
 def _random_generator(num):
     return math.floor(random.random() * num + 1)
-
 
 class SudokuGenerator:
     def __init__(self):
@@ -14,13 +12,8 @@ class SudokuGenerator:
         self._matrix = [[0 for _ in range(self._number_of_rows)] for _ in range(self._number_of_rows)]
 
     def _fill_values(self):
-        # Fill the diagonal of SRN x SRN matrices
         self._fill_diagonal()
-
-        # Fill remaining blocks
         self._fill_remaining(0, self._number_of_blocks_in_row)
-
-        # Remove Randomly K digits to make game
         self._remove_k_digits()
 
     def _fill_diagonal(self):
@@ -62,20 +55,13 @@ class SudokuGenerator:
         return True
 
     def _fill_remaining(self, i, j):
-        # Check if we have reached the end of the matrix
         if i == self._number_of_rows - 1 and j == self._number_of_rows:
             return True
-
-        # Move to the next row if we have reached the end of the current row
         if j == self._number_of_rows:
             i += 1
             j = 0
-
-        # Skip cells that are already filled
         if self._matrix[i][j] != 0:
             return self._fill_remaining(i, j + 1)
-
-        # Try filling the current cell with a valid value
         for num in range(1, self._number_of_rows + 1):
             if self._check_if_safe(i, j, num):
                 self._matrix[i][j] = num
@@ -83,7 +69,6 @@ class SudokuGenerator:
                     return True
                 self._matrix[i][j] = 0
 
-        # No valid value was found, so backtrack
         return False
 
     def _remove_k_digits(self):
