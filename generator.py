@@ -2,6 +2,10 @@ import random
 import math
 
 
+def _random_generator(num):
+    return math.floor(random.random() * num + 1)
+
+
 class SudokuGenerator:
     def __init__(self):
         self._number_of_rows = 9
@@ -35,13 +39,10 @@ class SudokuGenerator:
         for i in range(self._number_of_blocks_in_row):
             for j in range(self._number_of_blocks_in_row):
                 while True:
-                    num = self._random_generator(self._number_of_rows)
+                    num = _random_generator(self._number_of_rows)
                     if self._unused_in_box(row, col, num):
                         break
                 self._matrix[row + i][col + j] = num
-
-    def _random_generator(self, num):
-        return math.floor(random.random() * num + 1)
 
     def _check_if_safe(self, i, j, num):
         return (self._unused_in_row(i, num) and
@@ -88,13 +89,13 @@ class SudokuGenerator:
     def _remove_k_digits(self):
         count = self._number_of_digits_te_be_removed
         while count != 0:
-            i = self._random_generator(self._number_of_rows) - 1
-            j = self._random_generator(self._number_of_rows) - 1
+            i = _random_generator(self._number_of_rows) - 1
+            j = _random_generator(self._number_of_rows) - 1
             if self._matrix[i][j] != 0:
                 count -= 1
                 self._matrix[i][j] = 0
 
 
-    def get_sudoku_2d(self):
+    def generate(self):
         self._fill_values()
         return self._matrix
