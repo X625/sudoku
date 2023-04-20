@@ -1,4 +1,6 @@
+
 import time
+from memory_profiler import profile
 from queue import PriorityQueue
 from node import Node
 
@@ -29,7 +31,7 @@ class Sudoku:
         self.start = Node(initial_board)
         self.info = Info()
 
-
+    @profile
     def solve(self):
         start_time = time.time()
         CLOSED = set()
