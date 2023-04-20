@@ -1,94 +1,74 @@
-from copy import deepcopy
+import time
 from queue import PriorityQueue
-import utilities
+from node import Node
 
-_range9 = range(9)
+def decode(bit_string):
+    decoded_list = []
+    x = 1
+    while bit_string != 0:
+        if bit_string & 1:
+            decoded_list.append(x)
+        x += 1
+        bit_string >>= 1
+
+    return decoded_list
+
+class Info:
+    def __init__(self):
+        self.execution_time = 0
+        self.nodes_generated = 0
+        self.nodes_expanded = 0
+        self.depth_of_tree = 0
+        self.path = []
+        self.effective_branching_factor = 0
 
 class Sudoku:
 
-    def __init__(self, data):
-        self.matrix = data
 
-        self.encoded_possible_values = [[511 for j in _range9] for i in _range9]
-        for r, row in enumerate(self.matrix):
-            for c, val in enumerate(row):
-                self.update_possible_row_column_block_values(r, c, val)
+    def __init__(self, initial_board):
+        self.start = Node(initial_board)
+        self.info = Info()
 
 
-    def set_cell_value(self, row, col, value):
-        self.matrix[row][col] = value
-        self.update_possible_row_column_block_values(row, col, value)
+    def solve(self):
+        start_time = time.time()
+        CLOSED = set()
+        OPEN = PriorityQueue()
 
-    def update_possible_row_values(self, row, masked_value):
-        for i in _range9:
-            self.encoded_possible_values[row][i] &= masked_value
+        BEST_NODE = self.start
+        OPEN.put((BEST_NODE.fn(), BEST_NODE))
 
-    def update_possible_column_values(self, col, masked_value):
-        for i in _range9:
-            self.encoded_possible_values[i][col] &= masked_value
+        while not BEST_NODE.heuristic_func() == 0 and OPEN.qsize():
+            BEST_NODE = OPEN.get()[1]
+            CLOSED.add(BEST_NODE)
+            self.info.path.append(BEST_NODE)
+            self.info.nodes_expanded += 1
+            for child in Sudoku.get_children(BEST_NODE, self.info):
+                if child not in CLOSED:
+                    OPEN.put((child.fn(), child))
+        self.info.execution_time = (time.time() - start_time) * 1000
+        self.info.depth_of_tree = BEST_NODE.gn
+        self.info.effective_branching_factor = round(self.info.nodes_generated / BEST_NODE.gn, 2)
+        return BEST_NODE, self.info
 
-    def update_possible_block_values(self, row, col, masked_value):
-        block_start_row = int(row/3) * 3
-        block_start_column = int(col/3) * 3
-        block_end_row = block_start_row + 3
-        block_end_column = block_start_column + 3
-
-        for i in range(block_start_row, block_end_row):
-            for j in range(block_start_column, block_end_column):
-                self.encoded_possible_values[i][j] &= masked_value
-
-
-    def update_possible_row_column_block_values(self, row, col, val):
-        if not val:
-            return
-        self.encoded_possible_values[row][col] = 0
-        coded_val = 1 << val - 1
-        masked_value = 511 - coded_val
-        self.update_possible_row_values(row, masked_value)
-        self.update_possible_column_values(col, masked_value)
-        self.update_possible_block_values(row, col, masked_value)
-
-    def get_possible_expansions(self):
+    def get_children(node, info):
         pq = PriorityQueue()
-        for i, row in enumerate(self.encoded_possible_values):
-            for j, val in enumerate(row):
-                number_of_values_can_be_assigned_to_cell = bin(val).count("1")
-                if number_of_values_can_be_assigned_to_cell:
-                    decoded_values_list = utilities.decode(self.encoded_possible_values[i][j])
-                    pq.put((number_of_values_can_be_assigned_to_cell, i, j, decoded_values_list))
-        return pq
+        for i, rows in enumerate(node.encoded_values):
+            for j, val in enumerate(rows):
+                count1 = bin(val).count("1")
+                if count1:
+                    decoded_list = decode(node.encoded_values[i][j])
+                    pq.put((count1, i, j, decoded_list))
 
-    def fill_cells_with_only_one_possible_value(self):
-        cells_need_updating = True
-        while cells_need_updating:
-            cells_need_updating = False
-            for r, row in enumerate(self.encoded_possible_values):
-                for c, poss_vals in enumerate(row):
-                    pc = bin(poss_vals).count("1")
-                    if pc == 1:
-                        if not cells_need_updating:
-                            cells_need_updating = True
-                        val = utilities.decode(poss_vals)[0]
-                        self.set_cell_value(r, c, val)
-
-    def distance_to_goal(self):
-        x = [e for sub in self.matrix for e in sub]
-        return x.count(0)
-
-    def expand(self):
-        next_steps = self.get_possible_expansions()
-        if next_steps.qsize():
-            pc, row, col, choices = next_steps.get()
+        if pq.qsize():
+            _, row, col, choices = pq.get()
             children = []
             for val in choices:
-                child = deepcopy(self)
-                child.set_cell_value(row, col, val)
-                child.fill_cells_with_only_one_possible_value()
+                info.nodes_generated += 1
+                child = Node(node.board)
+                child.gn = node.gn + 1
+                child.parent = node
+                child.set_value(row, col, val)
                 children.append(child)
-
             return children
         return []
-
-
-    def __lt__(self, other):
-        return self.distance_to_goal() < other.distance_to_goal()

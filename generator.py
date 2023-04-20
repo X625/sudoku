@@ -8,7 +8,7 @@ class SudokuGenerator:
     def __init__(self):
         self._number_of_rows = 9
         self._number_of_blocks_in_row = 3
-        self._number_of_digits_te_be_removed = 40
+        self._number_of_digits_te_be_removed = 75
         self._matrix = [[0 for _ in range(self._number_of_rows)] for _ in range(self._number_of_rows)]
 
     def _fill_values(self):
